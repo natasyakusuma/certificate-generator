@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Sertifikat Magang</title>
+
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 297mm;
+      height: 210mm;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .certificate {
+      width: 297mm;
+      height: 210mm;
+
+      background-image: url("{{background}}");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+
+      position: relative;
+    }
+
+    /* QR CODE  */
+
+    .qr-code {
+      position: absolute;
+      top: 8mm;
+      right: 9mm;
+
+      width: 25mm;
+      height: 25mm;
+    }
+
+    /* LOGO */
+    .logo {
+    position: absolute;
+    top: 15mm;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 25mm;
+    height: auto;
+    }
+
+
+    /* HEADER */
+
+    .institution {
+      position: absolute;
+      top: 43mm;
+      left: 0;
+
+      width: 100%;
+
+      text-align: center;
+
+      font-size: 14pt;
+      font-weight: bold;
+    }
+
+
+    /* TITLE */
+
+    .title {
+      position: absolute;
+      top: 51mm;
+      left: 0;
+
+      width: 100%;
+
+      text-align: center;
+
+      font-family: Georgia, serif;
+      font-size: 27pt;
+      font-weight: bold;
+
+      letter-spacing: 5px;
+
+      color: #087333;
+    }
+
+
+    /* RECIPIENT */
+
+    .given-to {
+      position: absolute;
+      top: 68mm;
+      left: 0;
+
+      width: 100%;
+
+      text-align: center;
+
+      font-size: 15pt;
+    }
+
+    .student-name {
+      position: absolute;
+      top: 76mm;
+      left: 0;
+
+      width: 100%;
+
+      text-align: center;
+
+      font-size: 23pt;
+      font-weight: bold;
+    }
+
+    .student-nim {
+      position: absolute;
+      top: 85mm;
+      left: 0;
+
+      width: 100%;
+
+      text-align: center;
+
+      font-size: 14pt;
+    }
+
+    .student-study {
+      position: absolute;
+      top: 91mm;
+      left: 20mm;
+      right: 20mm;
+
+      text-align: center;
+
+      font-family: Georgia, serif;
+      font-style: italic;
+
+      font-size: 15pt;
+    }
+
+
+    /* DESCRIPTION */
+
+    .description {
+      position: absolute;
+      top: 105mm;
+      left: 40mm;
+      right: 40mm;
+
+      text-align: center;
+
+      font-family: Georgia, serif;
+      font-style: italic;
+
+      font-size: 14pt;
+
+      line-height: 1.6;
+    }
+
+
+    /* SIGNATURE */
+
+    .signature {
+      position: absolute;
+      top: 135mm;
+      left: 0;
+
+      width: 100%;
+
+      text-align: center;
+
+      font-family: Georgia, serif;
+      font-style: italic;
+
+      font-size: 14pt;
+    }
+
+    .position {
+      margin-top: 2mm;
+    }
+
+    /* Buat TTD sama Stempel */
+    .signature-space {
+      height: 20mm;
+    }
+
+    .official-name {
+      margin-top: 10mm;
+
+      font-size: 15pt;
+      font-weight: bold;
+
+      text-decoration: underline;
+    }
+
+    .official-rank {
+      margin-top: 2mm;
+    }
+
+    /* .official-nip {
+      margin-top: 1mm;
+    } */
+
+  </style>
+</head>
+
+<body>
+
+  <div class="certificate">
+
+    <!-- QR CODE -->
+    <img
+      class="qr-code"
+      src="{{qr}}"
+      alt="QR Code"
+    >
+
+    <!-- LOGO  -->
+     <img
+     class="logo"
+     src="{{logo}}"
+     alt="Logo Kejaksaan"
+    >
+
+
+    <!-- HEADER -->
+    <div class="institution">
+      KEJAKSAAN NEGERI SLEMAN
+    </div>
+
+
+    <!-- TITLE -->
+    <div class="title">
+      SERTIFIKAT
+    </div>
+
+
+    <!-- MAHASISWA -->
+    <div class="given-to">
+      Diberikan kepada:
+    </div>
+
+    <div class="student-name">
+      {{nama}}
+    </div>
+
+    <div class="student-nim">
+      NIM : {{nim}}
+    </div>
+
+    <div class="student-study">
+      {{prodi}} {{fakultas}} {{universitas}}
+    </div>
+
+
+    <!-- KETERANGAN -->
+    <div class="description">
+      Karena telah mengikuti kegiatan Magang Mahasiswa
+      Periode Tahun {{tahun}} di Kejaksaan Negeri Sleman
+      yang dilaksanakan pada tanggal
+      {{tanggalMulai}}
+      sampai dengan
+      {{tanggalSelesai}}.
+    </div>
+
+
+    <!-- TANDA TANGAN -->
+    <div class="signature">
+
+      <div>
+        Sleman, {{tanggalSelesai}}
+      </div>
+
+      <div class="position">
+        Kepala Kejaksaan Negeri Sleman,
+      </div>
+
+      <!--
+        Ruang kosong untuk tanda tangan dan cap
+      -->
+      <div class="signature-space"></div>
+
+      <div class="official-name">
+        {{namaKajari}}
+      </div>
+
+      <div class="official-rank">
+        {{pangkatKajari}}
+      </div>
+
+      <!-- <div class="official-nip">
+        NIP {{nipKajari}}
+      </div> -->
+
+    </div>
+
+  </div>
+
+</body>
+</html>
