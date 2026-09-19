@@ -193,8 +193,48 @@ async function generatePDF (html, mahasiswa) {
     printBackground: true,
   });
 
-  await browser.close();
+    await browser.close();
+
+    const filePath = `./output/certificates/${fileName}`;
+
+    const driveFile = await uploadToDrive(
+        filePath,
+        fileName
+    );
+
+    return driveFile;
     
+}
+
+async function uploadToDrive(filePath, fileName) {
+
+    const auth = new google.auth.GoogleAuth({
+        keyFile: process.env.RENDER
+            ? "/etc/secrets/service-account.json"
+            : "./credentials/service-account.json",
+        scopes: [
+            "https://www.googleapis.com/auth/drive"
+        ],
+    });
+
+    const drive = google.drive({
+        version: "v3",
+        auth,
+    });
+
+    const response = await drive.files.create({
+        requestBody: {
+            name: fileName,
+            parents: [process.env.GOOGLE_DRIVE_FOLDER_ID],
+        },
+        media: {
+            mimeType: "application/pdf",
+            body: fs.createReadStream(filePath),
+        },
+        fields: "id, name, webViewLink",
+    });
+
+    return response.data;
 }
 
 const background = await loadAsset(
@@ -222,9 +262,10 @@ async function generateCertificate() {
     logo
   );
 
-  await generatePDF(html, mahasiswa);
+const driveFile = await generatePDF(html, mahasiswa);
 
-  console.log("PDF Berhasil dibuat");
+console.log("PDF Berhasil dibuat");
+console.log("File Drive:", driveFile);
 }
 
 const app = express();
