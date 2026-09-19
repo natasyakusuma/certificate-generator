@@ -165,7 +165,9 @@ function generateFileName(mahasiswa){
 }
 
 async function generatePDF (html, mahasiswa) {
-    const browser = await puppeteer.launch({
+  console.log("Chromium executable path:", await chromium.executablePath());  
+  
+  const browser = await puppeteer.launch({
         executablePath: await chromium.executablePath(),
         args: chromium.args,
         headless: true,
