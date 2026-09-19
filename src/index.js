@@ -164,9 +164,7 @@ function generateFileName(mahasiswa){
 }
 
 async function generatePDF (html, mahasiswa) {
-    const browser = await puppeteer.launch({
-        executablePath: "/opt/render/.cache/puppeteer/chrome/linux-153.0.8010.36/chrome-linux64/chrome",
-    });
+    const browser = await puppeteer.launch();
     
     const page = await browser.newPage();
     await page.setContent(html, {
