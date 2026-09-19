@@ -7,7 +7,7 @@ import {readFile} from "fs/promises";
 import { pejabat } from "../config/pejabat.js";
 
 const auth = new google.auth.GoogleAuth({
-  credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT),
+  keyFile: "/etc/secrets/service-account.json",
   scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
 });
 
