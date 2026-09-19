@@ -208,18 +208,18 @@ async function generatePDF (html, mahasiswa) {
 
 async function uploadToDrive(filePath, fileName) {
 
-    const auth = new google.auth.GoogleAuth({
-        keyFile: process.env.RENDER
-            ? "/etc/secrets/service-account.json"
-            : "./credentials/service-account.json",
-        scopes: [
-            "https://www.googleapis.com/auth/drive"
-        ],
+    const driveAuth = new google.auth.OAuth2(
+        process.env.GOOGLE_DRIVE_CLIENT_ID,
+        process.env.GOOGLE_DRIVE_CLIENT_SECRET
+    );
+
+    driveAuth.setCredentials({
+        refresh_token: process.env.GOOGLE_DRIVE_REFRESH_TOKEN,
     });
 
     const drive = google.drive({
         version: "v3",
-        auth,
+        auth: driveAuth,
     });
 
     const response = await drive.files.create({
