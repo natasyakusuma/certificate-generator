@@ -5,6 +5,7 @@ import puppeteer from "puppeteer";
 import express from "express";
 import {readFile} from "fs/promises";
 import { pejabat } from "../config/pejabat.js";
+import chromium from "@sparticuz/chromium";
 
 const auth = new google.auth.GoogleAuth({
   keyFile:
@@ -164,8 +165,12 @@ function generateFileName(mahasiswa){
 }
 
 async function generatePDF (html, mahasiswa) {
-    const browser = await puppeteer.launch();
-    
+    const browser = await puppeteer.launch({
+        executablePath: await chromium.executablePath(),
+        args: chromium.args,
+        headless: true,
+    });
+
     const page = await browser.newPage();
     await page.setContent(html, {
         waitUntil:"networkidle0",
