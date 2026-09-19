@@ -6,6 +6,7 @@ import express from "express";
 import {readFile} from "fs/promises";
 import { pejabat } from "../config/pejabat.js";
 import chromium from "@sparticuz/chromium";
+import fs from "fs";
 
 const auth = new google.auth.GoogleAuth({
   keyFile:
@@ -174,11 +175,16 @@ async function generatePDF (html, mahasiswa) {
     });
 
     const page = await browser.newPage();
+
     await page.setContent(html, {
         waitUntil:"networkidle0",
     });
 
     const fileName = generateFileName(mahasiswa);
+
+    fs.mkdirSync("./output/certificates", {
+    recursive: true,
+    });
 
     await page.pdf({
     path: `./output/certificates/${fileName}`,
