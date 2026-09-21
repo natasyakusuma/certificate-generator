@@ -245,12 +245,12 @@ const logo = await loadAsset(
     "./assets/logo-kejaksaan.png"
 );
 
-async function generateCertificate() {
-
+async function generateCertificate(mahasiswa) {
  
-  const mahasiswa = await getData();
+  //const mahasiswa = await getData();
 
   const qrDataURL = await generateQR(mahasiswa);
+
   const template = await loadTemplate();
 
   const html = fillTemplate(
@@ -281,7 +281,9 @@ app.post("/generate-certificate", async (req, res) => {
 
     console.log("Request generate diterima");
 
-    await generateCertificate();
+    const mahasiswa = req.body;
+
+    await generateCertificate(mahasiswa);
 
     console.log("Generate selesai");
 
@@ -290,7 +292,7 @@ app.post("/generate-certificate", async (req, res) => {
       message: "PDF berhasil dibuat",
     });
 
-    } catch (error) {
+  } catch (error) {
 
     console.error("ERROR:", error);
 
@@ -299,7 +301,7 @@ app.post("/generate-certificate", async (req, res) => {
       message: error.message,
     });
 
-    }
+  }
 });
 
 const PORT = process.env.PORT || 3000;
