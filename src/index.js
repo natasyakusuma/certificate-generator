@@ -1,106 +1,26 @@
 import "dotenv/config";
+
 import { google } from "googleapis";
+
 import QRCode from "qrcode";
+
 import puppeteer from "puppeteer";
+
 import express from "express";
+
 import {readFile} from "fs/promises";
+
 import { pejabat } from "../config/pejabat.js";
+
 import chromium from "@sparticuz/chromium";
+
 import fs from "fs";
 
-const auth = new google.auth.GoogleAuth({
-  keyFile:
-    process.env.RENDER
-      ? "/etc/secrets/service-account.json"
-      : "./credentials/service-account.json",
-  scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
-});
 
-const sheets = google.sheets({
-  version: "v4",
-  auth,
-});
-function formatTanggalIndonesia(tanggal) {
-
-  if (!tanggal) {
-    return "";
-  }
-
-  const bulan = [
-    "Januari",
-    "Februari",
-    "Maret",
-    "April",
-    "Mei",
-    "Juni",
-    "Juli",
-    "Agustus",
-    "September",
-    "Oktober",
-    "November",
-    "Desember"
-  ];
-
-  const tanggalString = String(tanggal);
-
-  const match = tanggalString.match(
-    /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
-  );
-
-  if (match) {
-
-    const hari = match[1].padStart(2, "0");
-    const nomorBulan = Number(match[2]);
-    const tahun = match[3];
-
-    return `${hari} ${bulan[nomorBulan - 1]} ${tahun}`;
-
-  }
-
-  return tanggalString;
-
-}
-
-async function getData() {
-  const result = await sheets.spreadsheets.values.get({
-    spreadsheetId: process.env.GOOGLE_SHEET_ID,
-    range: "Form Responses 1!A2:N",
-  });
-
-    const dataTerakhir = result.data.values.at(-1);
-
-    const tanggalSelesai = dataTerakhir[7];
-
-    const tahun = tanggalSelesai
-    ? tanggalSelesai.split("/")[2]
-    : "";
-
-    const mahasiswa = {
-    nama: dataTerakhir[1],
-    nim: dataTerakhir[2],
-    universitas: dataTerakhir[3],
-    fakultas: dataTerakhir[4],
-    prodi: dataTerakhir[5],
-    tanggalMulai: formatTanggalIndonesia(dataTerakhir[6]),
-    tanggalSelesai: formatTanggalIndonesia(dataTerakhir[7]),
-     tahun: tahun,
-    nomorSertifikat: dataTerakhir[13],
-
-//   nama: "Natasya Kusuma Putri",
-//   nim: "123456789",
-//   universitas: "Universitas Atma Jaya Yogyakarta",
-//   fakultas: "Fakultas Hukum",
-//   prodi: "Ilmu Hukum",
-
-//   tanggalMulai: "01 September 2026",
-//   tanggalSelesai: "30 September 2026",
-//   tahun: "2026",
-};
- //console.log(mahasiswa);
- return mahasiswa;
-}
+// Function untuk membuat QR Code dari data mahasiswa
 
 async function generateQR(mahasiswa) {
+
   const isiQR = `${mahasiswa.nama}
 ${mahasiswa.universitas}
 ${mahasiswa.nomorSertifikat}
@@ -109,88 +29,141 @@ www.kejari-sleman.go.id`;
   const qrDataURL = await QRCode.toDataURL(isiQR);
 
   return qrDataURL;
+
 }
 
 
 //console.log(qrDataURL);
 
+
+// Function untuk membaca template sertifikat HTML
+
 async function loadTemplate() {
+
     const template = await readFile(
+
         "templates/certificate.html",
+
         "utf-8"
+
     );
+
     return template;
-    
+
 }
 
+
+// Function untuk membaca file background dan logo
+
 async function loadAsset(path) {
+
     const file = await readFile(path);
+
     const extension = path.split(".").pop();
 
     return `data:image/${extension};base64,${file.toString("base64")}`;
+
 }
+
+
+// Function untuk memasukkan data mahasiswa ke dalam template sertifikat
 
 function fillTemplate(template, mahasiswa, qrDataURL, pejabat,background,logo){
-return template
-    .replaceAll("{{nama}}", mahasiswa.nama)
-    .replaceAll("{{nim}}", mahasiswa.nim)
-    .replaceAll("{{universitas}}", mahasiswa.universitas)
-    .replaceAll("{{fakultas}}", mahasiswa.fakultas)
-    .replaceAll("{{prodi}}", mahasiswa.prodi)
-    .replaceAll("{{tanggalMulai}}", mahasiswa.tanggalMulai)
-    .replaceAll("{{tanggalSelesai}}", mahasiswa.tanggalSelesai)
-    .replaceAll(
-        "{{tahun}}",
-        new Date(mahasiswa.tanggalSelesai).getFullYear()
-    )
 
-    .replaceAll("{{tahun}}", mahasiswa.tahun)
-    .replaceAll("{{nomorSertifikat}}", mahasiswa.nomorSertifikat)
+return template
+
+    .replaceAll("{{nama}}", String(mahasiswa.nama))
+
+    .replaceAll("{{nim}}", String(mahasiswa.nim))
+
+    .replaceAll("{{universitas}}", String(mahasiswa.universitas))
+
+    .replaceAll("{{fakultas}}", String(mahasiswa.fakultas))
+
+    .replaceAll("{{prodi}}", String(mahasiswa.prodi))
+
+    .replaceAll("{{tanggalMulai}}", String(mahasiswa.tanggalMulai))
+
+    .replaceAll("{{tanggalSelesai}}", String(mahasiswa.tanggalSelesai))
+
+    .replaceAll("{{tahun}}", String(mahasiswa.tahun))
+
+    .replaceAll("{{nomorSertifikat}}", String(mahasiswa.nomorSertifikat))
+
     .replaceAll("{{qr}}", qrDataURL)
+
     .replaceAll("{{namaKajari}}", pejabat.nama)
+
     .replaceAll("{{pangkatKajari}}", pejabat.pangkat)
+
     .replaceAll("{{background}}", background)
+
     .replaceAll("{{logo}}", logo)
+
     //.replaceAll("{{nipKajari}}", pejabat.nip);
+
 }
 
-function generateFileName(mahasiswa){
-    const nama = mahasiswa.nama;
 
-    const nim = mahasiswa.nim
+// Function untuk membuat nama file PDF berdasarkan nama dan NIM mahasiswa
+
+function generateFileName(mahasiswa){
+
+    const nama = String(mahasiswa.nama);
+
+    const nim = String(mahasiswa.nim)
+
     .replace(/\s+/g, "")
+
     .replace(/[<>:"/\\|?*]/g, "");
 
     return `${nama}_${nim}.pdf`;
 
 }
 
+
+// Function untuk membuat file PDF dari HTML sertifikat
+
 async function generatePDF (html, mahasiswa) {
+
   console.log("Chromium executable path:", await chromium.executablePath());  
-  
+
   const browser = await puppeteer.launch({
+
         executablePath: await chromium.executablePath(),
+
         args: chromium.args,
+
         headless: true,
+
     });
 
     const page = await browser.newPage();
 
     await page.setContent(html, {
+
         waitUntil:"networkidle0",
+
     });
 
     const fileName = generateFileName(mahasiswa);
 
     fs.mkdirSync("./output/certificates", {
+
     recursive: true,
+
     });
 
     await page.pdf({
+
     path: `./output/certificates/${fileName}`,
+
     format: "A4",
+
     landscape: true,
+
     printBackground: true,
+
   });
 
     await browser.close();
@@ -198,55 +171,90 @@ async function generatePDF (html, mahasiswa) {
     const filePath = `./output/certificates/${fileName}`;
 
     const driveFile = await uploadToDrive(
+
         filePath,
+
         fileName
+
     );
 
     return driveFile;
-    
+
 }
+
+
+// Function untuk mengupload file PDF ke Google Drive
 
 async function uploadToDrive(filePath, fileName) {
 
     const driveAuth = new google.auth.OAuth2(
+
         process.env.GOOGLE_DRIVE_CLIENT_ID,
+
         process.env.GOOGLE_DRIVE_CLIENT_SECRET
+
     );
 
     driveAuth.setCredentials({
+
         refresh_token: process.env.GOOGLE_DRIVE_REFRESH_TOKEN,
+
     });
 
     const drive = google.drive({
+
         version: "v3",
+
         auth: driveAuth,
+
     });
 
     const response = await drive.files.create({
+
         requestBody: {
+
             name: fileName,
+
             parents: [process.env.GOOGLE_DRIVE_FOLDER_ID],
+
         },
+
         media: {
+
             mimeType: "application/pdf",
+
             body: fs.createReadStream(filePath),
+
         },
+
         fields: "id, name, webViewLink",
+
     });
 
     return response.data;
+
 }
 
+
+// Membaca background dan logo yang digunakan pada sertifikat
+
 const background = await loadAsset(
+
     "./assets/background.png"
+
 );
 
 const logo = await loadAsset(
+
     "./assets/logo-kejaksaan.png"
+
 );
 
+
+// Function untuk menjalankan proses pembuatan sertifikat
+
 async function generateCertificate(mahasiswa) {
- 
+
   //const mahasiswa = await getData();
 
   const qrDataURL = await generateQR(mahasiswa);
@@ -254,29 +262,47 @@ async function generateCertificate(mahasiswa) {
   const template = await loadTemplate();
 
   const html = fillTemplate(
+
     template,
+
     mahasiswa,
+
     qrDataURL,
+
     pejabat,
+
     background,
+
     logo
+
   );
 
-const driveFile = await generatePDF(html, mahasiswa);
+  const driveFile = await generatePDF(html, mahasiswa);
 
-console.log("PDF Berhasil dibuat");
-console.log("File Drive:", driveFile);
+  console.log("PDF Berhasil dibuat");
+
+  console.log("File Drive:", driveFile);
+
 }
+
+
+// Membuat aplikasi Express
 
 const app = express();
 
 app.use(express.json());
 
+
+// Function untuk menerima request pembuatan sertifikat
+
 app.get("/", (req, res) => {
+
   res.send("Certificate Generator aktif");
+
 });
 
 app.post("/generate-certificate", async (req, res) => {
+
   try {
 
     console.log("Request generate diterima");
@@ -288,8 +314,11 @@ app.post("/generate-certificate", async (req, res) => {
     console.log("Generate selesai");
 
     res.json({
+
       success: true,
+
       message: "PDF berhasil dibuat",
+
     });
 
   } catch (error) {
@@ -297,15 +326,21 @@ app.post("/generate-certificate", async (req, res) => {
     console.error("ERROR:", error);
 
     res.status(500).json({
+
       success: false,
+
       message: error.message,
+
     });
 
   }
+
 });
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
+
   console.log(`Server berjalan di port ${PORT}`);
+
 });
