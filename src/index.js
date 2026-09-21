@@ -126,9 +126,13 @@ function generateFileName(mahasiswa){
 
 async function generatePDF (html, mahasiswa) {
 
-  console.log("Chromium executable path:", await chromium.executablePath());  
+  let browser;
 
-  const browser = await puppeteer.launch({
+  if (process.env.RENDER) {
+
+    console.log("Menggunakan Chromium untuk Render");
+
+    browser = await puppeteer.launch({
 
         executablePath: await chromium.executablePath(),
 
@@ -138,23 +142,35 @@ async function generatePDF (html, mahasiswa) {
 
     });
 
-    const page = await browser.newPage();
+  } else {
 
-    await page.setContent(html, {
+    console.log("Menggunakan Chromium lokal");
 
-        waitUntil:"networkidle0",
+    browser = await puppeteer.launch({
 
-    });
-
-    const fileName = generateFileName(mahasiswa);
-
-    fs.mkdirSync("./output/certificates", {
-
-    recursive: true,
+        headless: true,
 
     });
 
-    await page.pdf({
+  }
+
+  const page = await browser.newPage();
+
+  await page.setContent(html, {
+
+      waitUntil:"networkidle0",
+
+  });
+
+  const fileName = generateFileName(mahasiswa);
+
+  fs.mkdirSync("./output/certificates", {
+
+  recursive: true,
+
+  });
+
+  await page.pdf({
 
     path: `./output/certificates/${fileName}`,
 
@@ -166,19 +182,19 @@ async function generatePDF (html, mahasiswa) {
 
   });
 
-    await browser.close();
+  await browser.close();
 
-    const filePath = `./output/certificates/${fileName}`;
+  const filePath = `./output/certificates/${fileName}`;
 
-    const driveFile = await uploadToDrive(
+  const driveFile = await uploadToDrive(
 
-        filePath,
+      filePath,
 
-        fileName
+      fileName
 
-    );
+  );
 
-    return driveFile;
+  return driveFile;
 
 }
 
