@@ -204,53 +204,65 @@ async function generatePDF (html, mahasiswa) {
 async function uploadToDrive(filePath, fileName) {
 
     const driveAuth = new google.auth.OAuth2(
-
         process.env.GOOGLE_DRIVE_CLIENT_ID,
-
         process.env.GOOGLE_DRIVE_CLIENT_SECRET
-
     );
 
     driveAuth.setCredentials({
-
         refresh_token: process.env.GOOGLE_DRIVE_REFRESH_TOKEN,
-
     });
 
     const drive = google.drive({
-
         version: "v3",
-
         auth: driveAuth,
-
     });
 
+    // Cek apakah file dengan nama yang sama sudah ada di folder tujuan
+    const existingFiles = await drive.files.list({
+        q: `'${process.env.GOOGLE_DRIVE_FOLDER_ID}' in parents
+            and name = '${fileName.replace(/'/g, "\\'")}'
+            and mimeType = 'application/pdf'
+            and trashed = false`,
+        fields: "files(id, name, webViewLink)",
+        spaces: "drive",
+    });
+
+    // Kalau sudah ada, jangan upload lagi
+    if (existingFiles.data.files.length > 0) {
+
+        console.log(
+            `⚠️ File ${fileName} sudah ada di Google Drive.`
+        );
+
+        return existingFiles.data.files[0];
+
+    }
+
+    // Kalau belum ada, baru upload
     const response = await drive.files.create({
 
         requestBody: {
-
             name: fileName,
-
-            parents: [process.env.GOOGLE_DRIVE_FOLDER_ID],
-
+            parents: [
+                process.env.GOOGLE_DRIVE_FOLDER_ID
+            ],
         },
 
         media: {
-
             mimeType: "application/pdf",
-
             body: fs.createReadStream(filePath),
-
         },
 
         fields: "id, name, webViewLink",
 
     });
 
+    console.log(
+        `✅ File ${fileName} berhasil diupload.`
+    );
+
     return response.data;
-
 }
-
 
 // Membaca background dan logo yang digunakan pada sertifikat
 
